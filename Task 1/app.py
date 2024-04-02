@@ -29,21 +29,27 @@ def Display_form(fields, field_types, action, form):
     )
 
     data = st.session_state.get('data', {})
-    index = st.session_state.get(action+'_index', 0)
+    form_name = st.session_state.get('form_name', '')
+    index = st.session_state.get('index', 0)
     current_index = 0
 
-    if st.session_state.get(action+'_form_name') == None:
-        st.session_state.get(action+'_form_name', action)
-    if st.session_state.get(action+'_form_name') != action:
+    if st.session_state.get('form_name') == None:
+        st.session_state.get('form_name', action)
+    if st.session_state.get('form_name') != action:
+        st.session_state['data'] = {}
         data = {}
-        st.session_state[action+'_index'] = 0
-        st.session_state[action+'_form_name'] = action
+        st.session_state['index'] = 0
+        st.session_state['form_name'] = action
         index = 0
     
     for i, field_name in enumerate(fields):
-        # if index <= i:
-        current_index = i
-        print(current_index)
+        if i == len(fields) - 1:
+            # print("Reached the last index")
+            current_index = i  
+        else:
+            print("")
+            # print("Not the last index yet")
+        
         if field_types[i] == 'text':
             value = st.text_input(field_name)
         elif field_types[i] == 'date':
@@ -53,21 +59,28 @@ def Display_form(fields, field_types, action, form):
             options = field.get('options', [])  # Fetch options if present, otherwise default to empty list
             value = st.selectbox(f"Select {field_name.lower()}", options)
         if value:
+            print(f"Before increment index{index}")
+            index += 1
+            print(f"After increment index{index}")
             data[field_name] = value
+            st.session_state['index'] = index
+            st.session_state['data'] = data  
         else:
             st.write(data)
             break
-    if st.button("Next"):
-        index += 1
-        st.session_state[action+'_index'] = index
-        st.session_state['data'] = data  
-        if(current_index >= index): 
-            Submit(data)
+    
+    if(index < len(fields)-1):
+        if st.button("Next"):
+            print(f"The index{i}")
+            # index += 1
+    else:
+                Submit(data)
+            
+        
         
 
 def Submit(data):
     if st.button("Submit"):
-        print("here submit")    
         st.write("Data submitted successfully!", st.session_state['data'])
         json_data = st.session_state['data']
         json_data = data
@@ -76,10 +89,9 @@ def Submit(data):
     if st.button("Cancel"):
         st.session_state.pop("index", None)
         st.session_state.pop("data", None)
-        print("here Cancle")    
         st.write("Data intake process canceled.")
     if st.button("Restart"):
-        print("here restart")    
+
         st.session_state.pop("index", None)
         st.session_state.pop("data", None)
         st.switch_page("app.py")
