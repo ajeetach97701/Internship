@@ -1,35 +1,42 @@
+import smtplib
+import email.message
+
 import streamlit as st
 
-fields = ['First Name', 'Last Name', 'Gender']
-item_types = ['text', 'text', 'dropdown']
+def Submit(data):
+    action = st.radio("What would you like to do?", ("Submit", "Cancel", "Restart"))
+    if st.button("Submit"):
+        if action == "Submit":
+            print("here submit")    
+            st.write("Data submitted successfully!", st.session_state['data'])
+            json_data = st.session_state['data']
+            mail_data = send_mail(json_data, "Test mail")
+            print(mail_data)
+        elif action == "Cancel":
+            st.write("Data intake process canceled.")
+        elif action == "Restart":
+            st.session_state.pop("index", None)
+            st.session_state.pop("data", None)
+            st.switch_page("app.py")
+            st.rerun()
 
-def display_next_field(current_index):
-    if current_index < len(fields):
-        field_label = fields[current_index]
-        field_type = item_types[current_index]
 
-        if field_type == 'text':
-            user_input = st.text_input(field_label)
-        elif field_type == 'dropdown':
-            options = ['Male', 'Female', 'Other']
-            user_input = st.selectbox(field_label, options)
-        
-        return user_input
 
-def main():
-    st.title('Dynamic Form')
 
-    form_data = []
-    current_index = st.session_state.get('current_index', 0)
-
-    if st.button('Give Form'):
-        user_input = display_next_field(current_index)
-        if user_input is not None:
-            form_data.append(user_input)
-            current_index += 1
-            st.session_state['current_index'] = current_index
-
-    st.write('Form Data:', form_data)
-
-if __name__ == "__main__":
-    main()
+                    
+def send_mail(Content, subject):
+    try:
+        msg = email.message.Message()
+        msg['Subject'] = f"{subject}"
+        msg['FROM'] = EMAIL
+        msg['To'] = EMAIL_TO
+        msg.add_header("Content-Type", 'text/html')
+        msg.set_payload(f'{Content}')
+        smtp = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+        smtp.starttls()
+        smtp.login(EMAIL, EMAIL_PASSWORD)
+        smtp.sendmail(msg['From'], [msg['To']], msg.as_string())
+        smtp.quit()
+        print("Successfully sent")
+    except Exception as e:
+        print(f"Failed to send email. Error: {str(e)}")
